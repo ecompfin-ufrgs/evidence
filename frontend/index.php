@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>e-Vidence - Economia Baseada em Evidências</title>
     <link rel="stylesheet" href="css/evidence.css">
-    <script src="js/myScript.js" defer></script>
+    <script src="js/evidence.js" defer></script>
 </head>
 <body>
     <h1>Bem vindo ao e-Vidence</h1>
