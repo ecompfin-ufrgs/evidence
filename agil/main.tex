@@ -1,0 +1,424 @@
+\documentclass[a4paper, 12pt]{report}
+
+%Pacotes linguísticos
+\usepackage[brazilian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{setspace}
+\usepackage{comment}
+\usepackage{textcomp}
+%\usepackage{todonotes}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{indentfirst}
+\usepackage{hyperref}
+\usepackage[round, authoryear]{natbib}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+
+%Pacotes matemáticos
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\newtheorem{definicao}{Definição}[section]
+\newtheorem{exemplo}{Exemplo}[section]
+\newtheorem{teorema}{Teorema}[section]
+\newtheorem{lema}{Lema}[section]
+\newtheorem{corolario}{Corolário}[section]
+\newtheorem{proposicao}{Proposição}[section]
+\newtheorem{listagem}{Listagem}[section]
+
+%Pacotes para código
+\usepackage{verbatim}
+\usepackage{listings}
+
+
+
+\title{\textit{FAME}:\\ módulo de finanças, atuária, gestão e economia do sistema \textit{e-Vidence}}
+
+\author{Nelson Seixas dos Santos  \\Núcleo de Ciência de Dados e Computacional em Economia e Finanças\\Faculdade de Ciências Econômicas\\Universidade Federal do Rio Grande do Sul}
+
+
+
+\date{\today}
+
+
+
+
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+
+\chapter{Introdução}
+\begin{doublespace}
+
+
+As bases de dados de carga e de dados meteorológicos são fundamentais para prover informação ao Operador Nacional do Sistema Elétrico no Brasil úteis para previsão de demanda e apreçamento da energia elétrica no mercado.  Em virtude disto, sua manutenção requer processos bem definidos e constantemente refatorados a fim de garantir a fidedignidade dos dados armazenados. Neste contexto, a ONS veio a público em busca de entes capacitados a prover um aplicativo que proviesse funcionalidades de pré-processamento de seus dados.
+
+Este trabalho é a documentação de requisitos do sistema de pré-processamento de dados de carga e meteorológicos \textit{EletroTempo} \textsuperscript{\textregistered}, proposto pela Bulzai Inteligência Artificial em parceria com a PUC/RIO e o \href{www.ufrgs.br\/nfa}{Núcleo de Ciência de Dados e Computacional em Economia e Finanças} da Universidade Federal do Rio Grande do Sul.  Seu formato segue o modelo de documentação de  \cite{sommerville2011} nos termos de \cite{IeeeSRS720574}, estando organizado em três partes em acordo com \cite{swebok2014}.
+
+Além desta introdução, há outros cinco capítulos.  O capítulo 2 é o documento de definição de sistema o qual contém os requisitos do sistema em alto nível de abstração, isto é, na perspectiva do domínio do problema, incluindo requisitos funcionais e não funcionais. O capítulo 3 é a especificação de requisitos de sistema a qual documenta os requisitos em uma visão sistêmica, levando em conta não apenas o software propriamente dito, mas também o meio em que ele atua.  O capítulo 4 consiste na especificação de requisitos de software onde se delimita precisamente os requisitos do software em si, servindo para futuras validações.
+
+O Sumário do presente trabalho apresenta a organização do sistema de forma mais detalhada.
+
+\end{doublespace}
+
+\chapter{Documento de Definição do Sistema}
+
+\begin{doublespace}
+\section{Requisitos elicitados}
+Foi realizada uma entrevista por e-mail para elicitação dos requisitos que, dentro das limitações impostas pelo desafio proposto na chamada pública, se aproxima no possível do proposto em \cite{kotonya_sommerville1998}.  O e-mail com as respostas às questões formuladas está reproduzido no Anexo.
+
+O requisito funcional a que o \textit{EletroTempo} \textsuperscript{\textregistered} precisa atender  é efetuar a limpeza da base de dados fornecida pela ONS e descrita no e-mail colocado no Anexo.
+
+Em termos de requisitos não funcionais, elencou-se apenas que o sistema deve ser desenvolvido em R (que é a preferência do cliente) ou em Python. A partir dos requisitos elicitados, foi criado um modelo de casos de uso para analisá-los.
+
+Vale notar que um caso de uso é a descrição de uma ação passível de ser realizada pelo sistema que atenda a uma necessidade de um usuário, aqui chamado ator. Neste modelo, a necessidade dos atores se dá dentro do contexto de uso em que o sistema vai operar. 
+
+
+\section{Análise de Requisitos}
+No nosso caso, o contexto de uso é o \textit{backend} dos sistemas do ONS, havendo basicamente um ator neste contexto, que é qualquer sistema da ONS que necessite consumir dados limpos na forma de arquivos (CSV ou JSON). A Tabela (\ref{tabelacontextoUso}) a seguir apresenta este contexto de modo mais sumarizado.
+
+
+
+\begin{table}[H]
+	\centering
+	\caption{\label{tabelacontextoUso} \textbf{Contexto de uso}}
+	\scalebox{0.9}{
+		\begin{tabular}{c|c|c|c}
+			\hline
+			& \emph{Usuário} & Tarefa & Ambiente.\\
+			\hline
+			1 & Sistema ONS & Lê arquivo de dados & Backend ONS\\
+			
+			\hline
+			
+			
+		\end{tabular}
+	}
+\end{table}
+
+Neste contexto, realiza-se o caso de uso Leitura de Dados descrito na Tabela (\ref{TabelaCasoUsoLerDados}) nos moldes de \citet[p.122]{cockburn2005}.
+
+\begin{table}[H]
+	\centering
+	\caption{\label{TabelaCasoUsoLerDados} Caso de Uso \textbf{Ler dados}}
+	\scalebox{0.5}{
+		\begin{tabular}{c|c}
+			\hline
+			\emph{Identificação} & Ler dados.\\
+			\hline
+			\emph{Escopo} & Backend ONS.\\
+			
+			\hline
+			\emph{Ator primário}\ & Sistema ONS.\\
+			
+			\hline
+			\emph{Interessados} & 	Sistema ONS e ONS.\\
+		
+			\hline
+			\emph{Pré-condições} & Backend deve estar operacional e o \textit{EletroTempo} \textsuperscript{\textregistered} tem que ter permissão de gravação em um diretório.\\
+			
+			\hline
+			\emph{Pós-condições} & O sistema lê os dados e efetua suas operações.\\
+			
+			\hline
+			\emph{Fluxo normal} & O sistema acessa o diretório de gravação do \textit{EletroTempo} \textsuperscript{\textregistered}.\\
+			
+			\hline
+			\emph{Fluxo alternativo} & Sem permissão de gravação, interrompe-se o processamento e envia-se um e-mail a um responsável da ONS.\\
+			
+			\hline
+			\emph{Requisitos} & Não há.\\
+			
+			\hline
+		\end{tabular}
+	}
+\end{table}
+	
+
+Complementando o modelo de casos de uso, por clareza, apresentamos a seguir seu diagrama de casos de uso.
+
+De posse do contexto de uso e dos casos de uso para cada ator, podemos mostrar os diagramas de caso de uso.  Abaixo, na Figura (\ref{DiagramaCasoUsoLerDados}), vemos o diagrama de caso de uso para o atendente.
+
+
+\begin{figure}[H]
+	\caption{\label{DiagramaCasoUsoLerDados} Diagrama de Caso de Uso Leitura de Dados}
+	\begin{center}
+		\includegraphics[scale=0.5]{DiagramaCasoUso.jpg}
+		
+		Fonte: Autor
+	\end{center}
+	
+\end{figure}
+
+\end{doublespace}
+
+
+
+
+\chapter{Especificação de Requisitos do Sistema}
+
+\begin{doublespace}
+Aqui se trataria do modelo de processo de negócios da ONS para avaliar a adequação do sistema proposto ao fluxo de trabalho da organização.  O desafio da chamada pública, porém, versa apenas sobre pré-processamento de dados, ficando a sistematização do negócio do cliente além do escopo do trabalho.
+
+Com efeito, o requisito funcional básico do \textit{EletroTempo} \textsuperscript{\textregistered} é prover a limpeza dos dados provenientes da base que foi definida pela ONS.  Sendo assim, cabe a ele apenas tratar os dados da base definida no e-mail em Anexo, independentemente do processo de negócio da ONS.
+
+Não obstante, considerando apenas as regras de negócio relativas ao \textit{EletroTempo} \textsuperscript{\textregistered}, apresentamos na Figura (\ref{FluxogramaLight}) um fluxograma que demonstra as partes essenciais de um processo de limpeza de base de dados.  Assim, embora o fluxograma da figura trate de outro sistema, sua funcionalidade central é a mesma, qual seja, higienizar uma base de dados.
+
+
+\begin{figure}[H]
+	\caption{\label{FluxogramaLight} Fluxograma de Processo de Limpeza de Dados}
+	\begin{center}
+		\includegraphics[scale=0.5]{Fluxograma_Interpolador.jpg}
+		
+		Fonte: Segundo Relatório Quadrimestral do Projeto SisPreCarga
+	\end{center}
+	
+\end{figure}
+
+\end{doublespace}
+
+
+
+
+\chapter{Especificação de Requisitos de Software }
+
+
+\section{Arquitetura Básica do \textit{EletroTempo} }
+
+\begin{doublespace}
+
+
+Trata-se de um \textit{pipeline} de dados sobre uma base relacional contendo três tabelas, quais sejam: 
+\begin{itemize}
+    \item Carga Minuto a Minuto;
+    \item Carga Semi-Horária, e
+    \item Variáveis Meteorológicas horárias
+\end{itemize}
+
+O \textit{pipeline} emprega o modelo arquitetural ``Extract, Transform and Load (ETL)'' modificado para gerar arquivos em formato JSON ou CSV dentro de um \textit{container} \href{https://www.docker.com/}{DOCKER} em vez de carregar a informação tratada diretamente na base de dados em produção. Deixa-se ao ONS a tarefa de carregar os dados pré-processados diretamente nas bases de dados de seus sistemas em produção.
+
+A Figura (\ref{VisaoEstatica}) a seguir mostra a estrutura estática do \textit{EletroTempo} \textsuperscript{\textregistered}.
+
+
+\begin{figure}[H]
+	\caption{\label{VisaoEstatica} Estrutura Estática do \textit{EletroTempo} \textsuperscript{\textregistered}}
+	\begin{center}
+		\includegraphics[scale=0.4]{DiagramaComponentes.jpg}
+		
+		Fonte: Autor
+	\end{center}
+	
+\end{figure}
+
+\section{Considerações sobre Paradigmas e Linguagens de Programação}
+\subsection{Paradigma de programação}
+Uma característica marcante da arquitetura em pipeline em bases de dados grandes (\textit{big data}) é que ela se estrutura como uma sequência de transformações sobre os dados que propicia o uso de linguagens que dão suporte ao paradigma de programação funcional.
+
+Neste paradigma, os dados são processados sem alteração no estado do programa por meio de funções matemáticas, facilitando a prova de correção dos resultados obtidos.  No mais, o paradigma funcional adequa-se perfeitamente ao emprego de uma arquitetura ETL.
+
+Ademais, especialmente quando se trata de bases de dados de grandes dimensões costumeiramente conhecidas pelas expressão \textit{big data}, o paradigma funcional se mostra o mais adequado em vista da facilidade de paralelização do código que ele propicia.
+
+\subsection{Linguagens} \label{linguagens}
+Não à toa, entre as linguagens que se destacam no processamento de \textit{big data}, temos apenas linguagens que dão amplo suporte (nativo ou por bibliotecas) ao paradigma funcional, quais sejam:
+
+\begin{itemize}
+    \item a linguagem \href{https://www.scala-lang.org/}{Scala};
+    \item a linguagem \href{https://www.python.org/}{Python}, e
+    \item a linguagem \href{https://www.r-project.org/}{R}
+\end{itemize}
+
+Tendo em vista que, a priori, tem-se como requisito não funcional que as alternativas de linguagens a serem usadas no projeto são R ou Python, limitar-nos-emos a cotejar a adequação apenas destas linguagens.
+
+Objetivamente, tanto Python quanto R são capazes de realizar as mesmas tarefas\footnote{No jargão da ciência da computação, ambas as linguagens são \href{https://en.wikipedia.org/wiki/Turing_completeness\#:~:text=In\%20computability\%20theory\%2C\%20a\%20system,to\%20simulate\%20any\%20Turing\%20machine.}{Turing Completas}.} e, inclusive, de trabalharem em conjunto para realização de tarefas.  Porém, elas se distinguem na abordagem de solução aos problemas e na disponibilidade de bibliotecas para a solução de problemas de caráter geral, tais como, inter-relação com sistema operacional ou bancos de dados.
+
+Isto ocorre, porque a concepção de que R é uma ambiente estatístico escrito em torno de uma linguagem de programação.  Nas palavras do documento \href{https://www.r-project.org/about.html}{About R}:
+
+\begin{quotation}
+    ``R is a language and environment for statistical computing and graphics. It is a GNU project which is similar to the S language and environment which was developed at Bell Laboratories (formerly AT\&T, now Lucent Technologies) by John Chambers and colleagues.
+    
+    ...
+    
+    R, like S, is designed around a true computer language...''
+\end{quotation}
+
+Ou seja, a linguagem R carrega consigo uma biblioteca de run-time pesada (ambiente R) em relação a linguagens de uso geral como Scala e Python.  Com efeito, nas palavras de \cite{ibmcloudteam2021}, onde fizemos alguns grifos, temos:
+\begin{quotation}
+   ``\textbf{The main difference between R and Python: Data analysis goals}
+   
+The main distinction between the two languages is in their approach to data science. Both open source programming languages are supported by large communities, continuously extending their libraries and tools. But while R is mainly used for statistical analysis, Python provides a more general approach to data wrangling.
+
+Python is a multi-purpose language, much like C++ and Java, with a readable syntax that’s easy to learn. Programmers use Python to delve into data analysis or use machine learning in \textit{scalable production environments}. For example, you might use Python to build face recognition into your mobile API or for developing a machine learning application.
+
+R, on the other hand, is built by statisticians and leans heavily into statistical models and specialized analytics. Data scientists use R for deep statistical analysis, supported by just a few lines of code and beautiful data visualizations. For example, you might use R for customer behavior analysis or genomics research.''
+\end{quotation}
+
+Em virtude disso, tipicamente, para processamento de grandes bases de dados, Python também costuma ser mais veloz que R como mostra, por exemplo, \cite{Korstanje2020}.  Esta diferença se torna ainda mais intensa pelo fato de Python ter sido desenhada para usar bibliotecas em C nativamente como objetos Python ao passo que, em R, tal procedimento é mais complexo e, normalmente, exige a escrita de em C, C++ ou Fortran, o que torna a tarefa mais custosa e demorada\footnote{Compare, por exemplo, o uso do pacote \href{https://cran.r-project.org/web/packages/Rcpp/index.html}{Rcpp} de R com o uso da biblioteca  \href{https://numpy.org/}{NumPy}, do compilador \textit{just in time} \href{https://numba.pydata.org/}{NumBa} ou do pacote compilador \href{https://cython.org/}{Cython} que transpila código Python para C para gerar uma biblioteca Python.}.
+
+Assim, na prática, a utilização de biblioteca de alto desempenho em Python é muito mais comum que em R cujas bibliotecas são, em grande parte, escritas na própria linguagem R.
+
+\subsection{Frameworks de Processamento de \textit{Big Data}} \label{frameworksBigData}
+
+Os principais frameworks de processamento de big data do mercado são projetos da \href{https://www.apache.org/}{Apache Software Foundation}. Em particular, os frameworks mais utilizados são \href{https://projects.apache.org/project.html?beam}{Apache Beam}, \href{https://nightlies.apache.org/flink/flink-docs-master/docs/dev/python/overview/}{Apache Flink}, \href{https://kafka-python.readthedocs.io/en/master/}{Apache Kafka} e, o mais maduro de todas estes, o  \href{https://spark.apache.org/}{Apache Spark}\footnote{A lista completa de frameworks big data da Apache Foundation pode ser encontrada \href{https://projects.apache.org/projects.html?category\#big-data}{aqui}.}.   
+
+Em termos de linguagens de programação, o que há em comum entre todos estes frameworks big data é que eles suportam apenas Scala, Java e Python\footnote{O Apache Spark também possui uma API para a linguagem R.}.  Isto significa que a adoção da linguagem R criaria uma restrição técnica à evolução do sistema de pré-processamento de dados em questão.
+
+
+Por isso, ainda que outras considerações possam ser feitas em fases posteriores do projeto, já nos adiantamos a indicar o uso da linguagem de programação Python.
+Quanto ao modelo de dados do \textit{EletroTempo} \textsuperscript{\textregistered}, tendo em vista não haver necessidade de fazer gravação em bases de dados relacionais, mas apenas gerar arquivos, basicamente o sistema produzirá arquivos CSV ou JSON.
+
+
+\end{doublespace}
+
+
+\chapter{Validação de Requisitos}
+
+\section{Prototipação}
+\begin{doublespace}
+\begin{comment}
+
+
+Para facilitar a validação do software especificado construímos um protótipo, utilizando dados públicos provenenientes da API do ONS para criar uma base relacional em \href{https://www.sqlite.org/index.html}{SQLite 3}.  A partir da base coletada, criou-se um procedimento que gera uma outra base por meio da poluição e corrompimento aleatório dos dados da base coletada.
+
+A base poluída, então, serve como simulação da base relacional efetivamente existente no ONS.  É a base poluída que passa pelos procedimentos de pré-processamento para gerar uma base limpa.  Compara-se, por fim, a base limpa com a base coletada em termos de erro quadrático médio das observações distintas.
+
+Vale notar, porém, que o resultado da comparação, de modo algum, reflete a eficiência do produto de software aqui especificado, tendo em vista o tamanho da base coletada e a simplicidade dos métodos implementados para limpeza da base poluída.
+
+Em suma, o protótipo tem o objetivo \textit{único e exclusivo} de facilitar a validação dos requisitos analisados.
+
+O código fonte do protótipo está disponível livremente no GitHub do Projeto.
+
+\end{comment}
+
+
+Para facilitar a validação do software especificado construímos um protótipo, que coleta dados públicos provenenientes da API do ONS, executa uma transformação sobre eles e, finalmente grava um arquivo CSV com os resultados da transformação, ou seja, produz "dados limpos".
+
+Nesse sentido, o protótipo guarda exatamente a mesma arquitetura projetada para o produto final, embora opere sobre dados distintos e efetue transformações mais simples do que as que serão necessárias para limpar os dados da base em produção.  Assim, o desempenho do processamento realizado pelo protótipo não pode ser comparado ao que seria realizado pelo produto de software aqui especificado..
+
+Em suma, o protótipo tem o objetivo \textit{único e exclusivo} de facilitar a validação dos requisitos analisados.
+
+O código fonte do protótipo está disponível livremente no \href{https://github.com/ecompfin-ufrgs/eletrotempo}{GitHub do Projeto EletroTempo}.
+
+
+
+\end{doublespace}
+
+
+
+\section{Evolução do Sistema}
+\begin{doublespace}
+A evolução do sistema fica condicionada ao contrato de manutenção nos termos lá previstos.  Nesse sentido, a depuração de erros presentes na implementação durante o período do contrato traduz a evolução do sistema.
+
+Não se trata aqui, pois, de ganho de funcionalidades para novos casos de uso, muito embora a adoção da linguagem Python, como discutido nas subseções (\ref{linguagens}) e (\ref{frameworksBigData}) facilita o acréscimo de funcionalidades futuras por não impor limitações técnicas.
+
+
+\end{doublespace}
+
+\chapter{Considerações finais}
+
+\begin{doublespace}
+Este trabalho se constitui no documento de requisitos do desafio da chamada pública da ONS para sistema de pré-processamento de dados.
+
+Apresentou-se aqui as principais documentações previstas no \citet{swebok2014} e pela \cite{IeeeSRS720574} no que respeita à engenharia de requisitos, incluindo uma primeira iteração na arquitetura do sistema bem como a introdução de um protótipo funcional para validar requisitos.
+\end{doublespace}
+
+\part*{Anexo}
+
+\chapter*{E-mail com Respostas a Questões sobre o Desafio}
+
+De: Bruna Devens Fraga <bruna.fraga@acate.com.br>
+
+Enviada em: quarta-feira, 5 de janeiro de 2022 16:31
+
+Para: Felipe Martins <felipe.martins@acate.com.br>
+
+Assunto: Desafio PEC - ONS | Esclarecimentos sobre as dúvidas
+
+\vspace{.5cm}
+
+Boa tarde a todos,
+
+ 
+
+Diante de algumas dúvidas que surgiram nesse momento de desenvolvimento da proposta, gostaríamos de uniformizar as respostas a todos os participantes, visto que muitas delas são bem parecidas. Lembrando que as propostas devem ser enviadas até o final dessa semana (7/1), conforme havíamos combinado no final do ano.
+
+\vspace{.3cm} 
+
+Fico à disposição,
+
+1. De quantas fontes de dados estamos falando?
+\vspace{.2cm}
+
+a. 3 tabelas de base de dados (Carga Minuto a Minuto, Carga Semi-Horária, Variáveis Meteorológicas horárias).
+\vspace{.2cm}
+
+2. Qual o tamanho das bases? Como será feita a extração dos dados, precisamos pensar numa automatização ou isso já está pronto do lado da ONS? E como vamos acessar essas bases? Qual o período do histórico?
+\vspace{.2cm}
+
+a. 30 séries de carga minuto a minuto e semi-horárias
+\vspace{.2cm}
+
+b. Aproximadamente 610 séries de cada variável listada:
+
+\begin{itemize}
+    \item Temperatura;
+    \item temperatura máxima;
+    \item temperatura mínima;
+    \item precipitação;
+    \item umidade relativa;
+    \item radiação
+    
+\end{itemize}
+\vspace{.2cm}
+
+
+
+c. Dados históricos desde 2016
+\vspace{.2cm}
+
+d. Esses dados serão extraídos do Data Lake ONS no ambiente AWS
+\vspace{.2cm}
+
+3. Sobre a entrega dos modelos, temos que apenas entregá-los e a ONS poderá rodar em qualquer VM (Máquina Virtual) ou precisamos criar um ambiente de produção?
+\vspace{.2cm}
+
+O modelo deverá ser alocado em um container (Docker) que efetua a leitura dos dados em uma base, e disponibiliza os arquivos com dados tratados.
+\vspace{.2cm}
+
+4. Existe alguma restrição de uso de tecnologia ou linguagem?
+\vspace{.2cm}
+
+O Código deverá ser entregue em linguagem aberta R (preferencialmente) ou Python
+\vspace{.2cm}
+
+5. Nossa infraestrutura hoje está na AWS, mas nada impede de usarmos a infraestrutura (AWS, Azure, GCP) da ONS, caso já possuam.
+\vspace{.2cm}
+
+O ONS já trabalha com a infraestrutura em AWS.
+\vspace{.2cm}
+
+6. Sobre o questionamento de fazer uma POC, precisamos visualizar esses os dados para entender a viabilidade e natureza do problema, você acha possível?
+\vspace{.2cm}
+
+Não haverá POC.
+\vspace{.2cm}
+
+7. Opção de oferecer uma POC como proposta.
+\vspace{.2cm}
+
+Não haverá POC
+
+
+\bibliographystyle{plainnat}
+\bibliography{referencias}
+\end{document}
