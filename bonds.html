@@ -14,18 +14,15 @@
     <script src="js/myScript.js" defer></script>
 </head>
 <body>
-     <!--[if lt IE 7]>
-            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
-        <![endif]-->
-
     <h1>Mercado de Renda Fixa no Brasil</h1>
-    <p> Esta é a página onde encontrará informações sobre a conjuntura e o cenário para
-        o mercado de Renda Fixa no Brasil.</p>
+    <p> Esta é a página onde encontrará informações sobre a conjuntura e o cenário para o mercado de Renda Fixa no Brasil.</p>
 
     <h2>Previsão da Taxa de Juros:</h2>
     
-        <p>Escolha o método de previsão</p> 
-        <label for="languages">Lista de métodos:</label>
+    <p>Escolha o método de previsão</p> 
+    <label for="languages">Lista de métodos:</label>
+    
+    <div style="display: inline-block;">
         <select name="" id="metodosPrevisaoRetornosAcoes">
             <option value="CIR" selected>CIR</option>
             <option value="Vasicek">Vasicek</option>
@@ -33,6 +30,10 @@
             <option value="BDT">BDT</option>
             <option value="Merton">Merton</option>
         </select>
+
+        <button type="submit">Enviar</button>
+    </div>
+
     <script src="" async defer></script>
 </body>
 </html>
