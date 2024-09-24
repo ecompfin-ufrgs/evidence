@@ -12,7 +12,7 @@ import pandas as pd
 from datetime import datetime, date
 
 
-def get_cdi(inicial: datetime, final=None):
+def get_cdi(inicial: datetime, final: datetime = None):
     if final is None:
         cdi = sgs.get({'cdi':12}, start = inicial)
         return cdi
