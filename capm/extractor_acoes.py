@@ -1,9 +1,3 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-import yfinance as yf
-from datetime import datetime
-
 """
 Função Extrai Dados de Ações da B3
 Essa função coleta preços de fechamento de uma ação da B3 no Yahoo Finance para uma lista de datas específicas e os retorna em forma de lista
@@ -11,6 +5,12 @@ Autores: Gabriel Pegoraro Vieira, Murilo Fiorio Pires
 Data: 24/09/2024
 Versão: 0.0.1
 """
+
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import yfinance as yf
+from datetime import datetime
 
 def get_stock_price_b3(codigo: str, datas: list) -> list:
    """Esta função coleta dados de ações da B3 no Yahoo Finance.  Seus argumentos
